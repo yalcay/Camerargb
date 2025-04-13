@@ -27,53 +27,67 @@
             android:inputType="numberDecimal|numberSigned"/>
     </LinearLayout>
 
-    <LinearLayout
+    <GridLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="8dp">
+        android:columnCount="4"
+        android:rowCount="2"
+        android:layout_marginTop="16dp">
 
+        <!-- İlk satır -->
         <Spinner
             android:id="@+id/colorModeSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"/>
-
-        <HorizontalScrollView
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
-            
-            <LinearLayout
-                android:id="@+id/colorButtonContainer"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"/>
-        </HorizontalScrollView>
-    </LinearLayout>
+            android:layout_columnWeight="1"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginTop="8dp">
-
-        <LinearLayout
-            android:id="@+id/functionButtonContainer"
-            android:layout_width="match_parent"
+        <ToggleButton
+            android:id="@+id/colorButton1"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"/>
+            android:layout_columnWeight="1"/>
 
-        <LinearLayout
-            android:id="@+id/operatorButtonContainer"
-            android:layout_width="match_parent"
+        <ToggleButton
+            android:id="@+id/colorButton2"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginTop="4dp"/>
-    </LinearLayout>
+            android:layout_columnWeight="1"/>
+
+        <ToggleButton
+            android:id="@+id/colorButton3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_columnWeight="1"/>
+
+        <!-- İkinci satır -->
+        <Button
+            android:id="@+id/functionX"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="x"
+            android:layout_columnWeight="1"/>
+
+        <Button
+            android:id="@+id/functionSqrt"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="√x"
+            android:layout_columnWeight="1"/>
+
+        <Button
+            android:id="@+id/functionSquare"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="x²"
+            android:layout_columnWeight="1"/>
+
+        <Button
+            android:id="@+id/functionReciprocal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="1/x"
+            android:layout_columnWeight="1"/>
+    </GridLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
