@@ -96,6 +96,15 @@ public class MainActivity extends AppCompatActivity {
             this.bitmap = bitmap;
         }
     }
+	
+    private void setupNewStudyButton() {
+        btnNewStudy.setOnClickListener(v -> {
+            if (isProcessingExcel) {
+                Toast.makeText(this, 
+                    "Please wait for the current study to finish processing", 
+                    Toast.LENGTH_LONG).show();
+                return;
+            }
 
     private void processPhoto(File photoFile) {
         try {
