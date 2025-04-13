@@ -205,38 +205,107 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         functionInput.setText(currentFunction);
     }
 
-    private void calculateConcentration() {
-        if (selectedColorComponent.isEmpty()) {
-            Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
-            return;
-        }
+	private void calculateConcentration() {
+		if (selectedColorComponent.isEmpty()) {
+			Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
+			return;
+		}
 
-        try {
-            double slope = Double.parseDouble(slopeInput.getText().toString());
-            double intercept = Double.parseDouble(interceptInput.getText().toString());
+		try {
+			double slope = Double.parseDouble(slopeInput.getText().toString());
+			double intercept = Double.parseDouble(interceptInput.getText().toString());
 
-            // Get color value from the center of rectangle area
-            int[] location = new int[2];
-            rectangleView.getLocationInWindow(location);
-            int centerX = location[0] + rectangleView.getWidth() / 2;
-            int centerY = location[1] + rectangleView.getHeight() / 2;
+			// Dikdörtgenin merkezinden renk değerini al
+			int[] location = new int[2];
+			rectangleView.getLocationInWindow(location);
+			int centerX = location[0] + rectangleView.getWidth() / 2;
+			int centerY = location[1] + rectangleView.getHeight() / 2;
 
-            // Get the color value
-            double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
+			// Renk değerini al
+			double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
 
-            // Calculate concentration using the formula: concentration = (colorValue - intercept) / slope
-            double concentration = (colorValue - intercept) / slope;
+			// Fonksiyonu uygula
+			String function = functionInput.getText().toString();
+			double transformedValue = applyFunction(colorValue, function);
 
-            // Display result
-            resultText.setText(String.format("Color Value: %.2f\nConcentration: %.2f", colorValue, concentration));
+			// Konsantrasyonu hesapla: (transformedValue - intercept) / slope
+			double concentration = (transformedValue - intercept) / slope;
 
-        } catch (NumberFormatException e) {
-            Toast.makeText(this, "Please enter valid slope and intercept values", 
-                Toast.LENGTH_SHORT).show();
-        } catch (Exception e) {
-            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-    }
+			// Sonucu göster
+			resultText.setText(String.format(
+				"Color Value: %.2f\nTransformed Value: %.2f\nConcentration: %.2f",
+				colorValue, transformedValue, concentration));
+
+		} catch (NumberFormatException e) {
+			Toast.makeText(this, "Please enter valid slope and intercept values", 
+				Toast.LENGTH_SHORT).show();
+		} catch (Exception e) {
+			Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+		}
+	}
+
+	private double applyFunction(double value, String function) {
+		if (function.contains("1/")) {
+			return 1.0 / value;
+		} else if (function.contains("√")) {
+			return Math.sqrt(value);
+		} else if (function.contains("²")) {
+			return value * value;
+		} else if (function.contains("+")) {
+			String[] parts = function.split("\\+");
+			double sum = 0;
+			for (String part : parts) {
+				sum += evaluateExpression(part.trim(), value);
+			}
+			return sum;
+		} else if (function.contains("-")) {
+			String[] parts = function.split("-");
+			double result = evaluateExpression(parts[0].trim(), value);
+			for (int i = 1; i < parts.length; i++) {
+				result -= evaluateExpression(parts[i].trim(), value);
+			}
+			return result;
+		} else if (function.contains("×")) {
+			String[] parts = function.split("×");
+			double product = 1;
+			for (String part : parts) {
+				product *= evaluateExpression(part.trim(), value);
+			}
+			return product;
+		} else if (function.contains("÷")) {
+			String[] parts = function.split("÷");
+			double result = evaluateExpression(parts[0].trim(), value);
+			for (int i = 1; i < parts.length; i++) {
+				double divisor = evaluateExpression(parts[i].trim(), value);
+				if (divisor == 0) {
+					throw new ArithmeticException("Division by zero");
+				}
+				result /= divisor;
+			}
+			return result;
+		}
+		
+		return value; // Fonksiyon yoksa değeri aynen döndür
+	}
+
+	private double evaluateExpression(String expression, double value) {
+		expression = expression.trim();
+		if (expression.isEmpty()) return 0;
+		
+		if (expression.contains("1/")) {
+			return 1.0 / value;
+		} else if (expression.contains("√")) {
+			return Math.sqrt(value);
+		} else if (expression.contains("²")) {
+			return value * value;
+		} else {
+			try {
+				return Double.parseDouble(expression);
+			} catch (NumberFormatException e) {
+				return value;
+			}
+		}
+	}
 
     private double getColorValue(String component, int x, int y) {
         // Get bitmap from preview
