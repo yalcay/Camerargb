@@ -21,18 +21,14 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
     private EditText functionInput;
     private TextView resultText;
     private Spinner colorModeSpinner;
-    private LinearLayout colorButtonContainer;
-    private LinearLayout functionButtonContainer;
-    private LinearLayout operatorButtonContainer;
-    private ToggleButton[] colorButtons;
+    private GridLayout buttonGrid;
+    private Button[] colorButtons;
     private PreviewView previewView;
     private ImageView rectangleView;
     private Button calculateButton;
     private ImageButton clearFunctionButton;
     private String selectedColorComponent = "";
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    private GridLayout buttonGrid;
-    private Button[] colorButtons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +37,7 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
 
         initializeViews();
         setupSpinner();
+        setupColorButtons();
         setupFunctionButtons();
         setupOperatorButtons();
         setupCalculateButton();
@@ -60,7 +57,6 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         calculateButton = findViewById(R.id.calculateButton);
         clearFunctionButton = findViewById(R.id.clearFunctionButton);
 
-        // Color butonlarını bul
         colorButtons = new Button[3];
         colorButtons[0] = findViewById(R.id.colorButton1);
         colorButtons[1] = findViewById(R.id.colorButton2);
@@ -75,7 +71,6 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         shape.setStroke(4, Color.GREEN);
         shape.setColor(Color.TRANSPARENT);
 
-        // 0.5 x 1 cm boyutlarını piksel cinsine çevir
         float density = getResources().getDisplayMetrics().density;
         int width = (int) (0.5 * 37.8 * density);  // 0.5 cm
         int height = (int) (1.0 * 37.8 * density); // 1 cm
@@ -84,42 +79,6 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         rectParams.gravity = android.view.Gravity.CENTER;
         rectangleView.setLayoutParams(rectParams);
         rectangleView.setBackground(shape);
-    }
-
-    private void setupCalculateButton() {
-        calculateButton.setOnClickListener(v -> {
-            if (selectedColorComponent.isEmpty()) {
-                Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            try {
-                double slope = Double.parseDouble(slopeInput.getText().toString());
-                double intercept = Double.parseDouble(interceptInput.getText().toString());
-
-                // Get color value from the center of rectangle area
-                int[] location = new int[2];
-                rectangleView.getLocationInWindow(location);
-                int centerX = location[0] + rectangleView.getWidth() / 2;
-                int centerY = location[1] + rectangleView.getHeight() / 2;
-
-                // Get the color value
-                double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
-
-                // Calculate concentration using the formula: concentration = (colorValue - intercept) / slope
-                double concentration = (colorValue - intercept) / slope;
-
-                // Display result
-                resultText.setText(String.format("Color Value: %.2f\nConcentration: %.2f", 
-                    colorValue, concentration));
-
-            } catch (NumberFormatException e) {
-                Toast.makeText(this, "Please enter valid slope and intercept values", 
-                    Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {
-                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 
     private void setupSpinner() {
@@ -136,7 +95,12 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
                 colorButtons[0].setText(isRGB ? "R" : "H");
                 colorButtons[1].setText(isRGB ? "G" : "S");
                 colorButtons[2].setText(isRGB ? "B" : "V");
-                selectedColorComponent = ""; // Seçimi sıfırla
+                selectedColorComponent = ""; // Reset selection
+                
+                // Reset button states
+                for (Button button : colorButtons) {
+                    button.setSelected(false);
+                }
             }
 
             @Override
@@ -151,7 +115,7 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
                 selectedColorComponent = component;
                 updateFunctionInput(component);
                 
-                // Diğer butonların seçimini kaldır
+                // Toggle button states
                 for (Button other : colorButtons) {
                     other.setSelected(other == v);
                 }
@@ -159,57 +123,40 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         }
     }
 
-    private void setupColorButtons(String mode) {
-        colorButtonContainer.removeAllViews();
-        String[] colors = mode.equals("RGB") ? new String[]{"R", "G", "B"} : new String[]{"H", "S", "V"};
-        colorButtons = new ToggleButton[colors.length];
-
-        for (int i = 0; i < colors.length; i++) {
-            ToggleButton button = new ToggleButton(this);
-            button.setTextOn(colors[i]);
-            button.setTextOff(colors[i]);
-            button.setText(colors[i]);
-            
-            final String color = colors[i];
-            button.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if (isChecked) {
-                    selectedColorComponent = color;
-                    for (ToggleButton otherButton : colorButtons) {
-                        if (otherButton != buttonView) {
-                            otherButton.setChecked(false);
-                        }
-                    }
-                    updateFunctionInput(color);
-                }
-            });
-
-            colorButtonContainer.addView(button);
-            colorButtons[i] = button;
-        }
-    }
-
     private void setupFunctionButtons() {
-        String[] functions = {"x", "√x", "x²", "1/x"};
-        functionButtonContainer.removeAllViews();
+        Button[] functionButtons = new Button[]{
+            findViewById(R.id.functionX),
+            findViewById(R.id.functionSqrt),
+            findViewById(R.id.functionSquare),
+            findViewById(R.id.functionReciprocal)
+        };
 
-        for (String function : functions) {
-            Button button = new Button(this);
-            button.setText(function);
+        String[] functions = {"x", "√x", "x²", "1/x"};
+        for (int i = 0; i < functionButtons.length; i++) {
+            Button button = functionButtons[i];
+            String function = functions[i];
             button.setOnClickListener(v -> appendToFunction(function));
-            functionButtonContainer.addView(button);
         }
     }
 
     private void setupOperatorButtons() {
-        String[] operators = {"+", "-", "×", "÷"};
-        operatorButtonContainer.removeAllViews();
+        Button[] operatorButtons = new Button[]{
+            findViewById(R.id.operatorAdd),
+            findViewById(R.id.operatorSubtract),
+            findViewById(R.id.operatorMultiply),
+            findViewById(R.id.operatorDivide)
+        };
 
-        for (String operator : operators) {
-            Button button = new Button(this);
-            button.setText(operator);
+        String[] operators = {"+", "-", "×", "÷"};
+        for (int i = 0; i < operatorButtons.length; i++) {
+            Button button = operatorButtons[i];
+            String operator = operators[i];
             button.setOnClickListener(v -> appendToFunction(" " + operator + " "));
-            operatorButtonContainer.addView(button);
         }
+    }
+
+    private void setupCalculateButton() {
+        calculateButton.setOnClickListener(v -> calculateConcentration());
     }
 
     private void setupClearFunctionButton() {
@@ -230,6 +177,8 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         functionInput.setText(currentFunction);
     }
 
+    // ... (calculateConcentration, applyFunction, evaluateExpression, getColorValue metodları aynı kalacak) ...
+
     private void calculateConcentration() {
         if (selectedColorComponent.isEmpty()) {
             Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
@@ -240,23 +189,16 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
             double slope = Double.parseDouble(slopeInput.getText().toString());
             double intercept = Double.parseDouble(interceptInput.getText().toString());
 
-            // Dikdörtgenin merkezinden renk değerini al
             int[] location = new int[2];
             rectangleView.getLocationInWindow(location);
             int centerX = location[0] + rectangleView.getWidth() / 2;
             int centerY = location[1] + rectangleView.getHeight() / 2;
 
-            // Renk değerini al
             double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
-
-            // Fonksiyonu uygula
             String function = functionInput.getText().toString();
             double transformedValue = applyFunction(colorValue, function);
-
-            // Konsantrasyonu hesapla: (transformedValue - intercept) / slope
             double concentration = (transformedValue - intercept) / slope;
 
-            // Sonucu göster
             resultText.setText(String.format(
                 "Color Value: %.2f\nTransformed Value: %.2f\nConcentration: %.2f",
                 colorValue, transformedValue, concentration));
