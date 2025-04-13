@@ -56,6 +56,9 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         calculateButton = findViewById(R.id.calculateButton);
         clearFunctionButton = findViewById(R.id.clearFunctionButton);
         colorModeSpinner = findViewById(R.id.colorModeSpinner);
+        colorButtonContainer = findViewById(R.id.colorButtonContainer);
+        functionButtonContainer = findViewById(R.id.functionButtonContainer);
+        operatorButtonContainer = findViewById(R.id.operatorButtonContainer);
 
         setupRectangleView();
     }
