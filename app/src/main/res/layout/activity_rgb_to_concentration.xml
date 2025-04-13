@@ -32,11 +32,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:columnCount="4"
-        android:rowCount="2"
+        android:rowCount="3"
         android:layout_marginTop="16dp"
         android:alignmentMode="alignBounds">
 
-        <!-- İlk satır -->
+        <!-- İlk satır: Spinner ve RGB/HSV butonları -->
         <Spinner
             android:id="@+id/colorModeSpinner"
             android:layout_width="0dp"
@@ -61,7 +61,7 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"/>
 
-        <!-- İkinci satır -->
+        <!-- İkinci satır: Fonksiyon butonları -->
         <Button
             android:id="@+id/functionX"
             android:layout_width="0dp"
@@ -88,6 +88,35 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="1/x"
+            android:layout_columnWeight="1"/>
+
+        <!-- Üçüncü satır: Operatör butonları -->
+        <Button
+            android:id="@+id/operatorAdd"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="+"
+            android:layout_columnWeight="1"/>
+
+        <Button
+            android:id="@+id/operatorSubtract"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:layout_columnWeight="1"/>
+
+        <Button
+            android:id="@+id/operatorMultiply"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="×"
+            android:layout_columnWeight="1"/>
+
+        <Button
+            android:id="@+id/operatorDivide"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="÷"
             android:layout_columnWeight="1"/>
     </GridLayout>
 
