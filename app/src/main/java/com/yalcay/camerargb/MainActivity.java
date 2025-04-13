@@ -117,6 +117,70 @@ public class MainActivity extends AppCompatActivity {
 		});
 	}
 
+	@Override
+	public void onBackPressed() {
+		if (previewView.getVisibility() == View.VISIBLE) {
+			// Eğer kamera açıksa ve çalışma devam ediyorsa
+			new AlertDialog.Builder(this)
+				.setTitle("Finish Study")
+				.setMessage(String.format("Current Date and Time (UTC): %s\nUser: %s\n\nDo you want to finish this study?",
+					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()),
+					"yalcay"))
+				.setPositiveButton("Yes", (dialog, which) -> {
+					try {
+						if (excelManager != null) {
+							excelManager.close();
+						}
+
+						// Çalışmayı temizle
+						clearCurrentStudy();
+						
+						// Ana menüyü göster
+						btnNewStudy.setVisibility(View.VISIBLE);
+						btnRgbToConcentration.setVisibility(View.VISIBLE);
+						btnCalibrate.setVisibility(View.VISIBLE);
+						
+						// Kamera ile ilgili görünümleri gizle
+						previewView.setVisibility(View.GONE);
+						rectangleView.setVisibility(View.GONE);
+						captureButton.setVisibility(View.GONE);
+						photoRecyclerView.setVisibility(View.GONE);
+						btnFinishStudy.setVisibility(View.GONE);
+
+						// Başarı mesajı göster
+						Toast.makeText(this, 
+							"Study completed successfully", 
+							Toast.LENGTH_SHORT).show();
+
+						// Kamerayı kapat
+						ProcessCameraProvider.getInstance(this).addListener(() -> {
+							try {
+								ProcessCameraProvider cameraProvider = 
+									ProcessCameraProvider.getInstance(this).get();
+								cameraProvider.unbindAll();
+							} catch (Exception e) {
+								Log.e("CameraX", "Failed to unbind camera uses cases", e);
+							}
+						}, ContextCompat.getMainExecutor(this));
+
+					} catch (IOException e) {
+						Toast.makeText(this, 
+							"Error closing study: " + e.getMessage(), 
+							Toast.LENGTH_LONG).show();
+						e.printStackTrace();
+					}
+				})
+				.setNegativeButton("No", null)
+				.setOnCancelListener(dialog -> {
+					// Dialog iptal edilirse veya dışarı tıklanırsa hiçbir şey yapma
+				})
+				.show();
+		} else {
+			// Eğer ana menüdeyse normal geri tuşu davranışını uygula
+			super.onBackPressed();
+		}
+	}
+
 	private void showFocusIndicator(float x, float y) {
 		// Odak göstergesi için yeni view oluştur
 		ImageView focusIndicator = new ImageView(this);
