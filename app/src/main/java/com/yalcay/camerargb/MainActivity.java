@@ -629,13 +629,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (previewView.getVisibility() == View.VISIBLE) {
-            startCamera();
-        }
-    }
 
     @Override
     protected void onPause() {
