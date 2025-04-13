@@ -123,37 +123,37 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         }
     }
 
-    private void setupFunctionButtons() {
-        Button[] functionButtons = new Button[]{
-            findViewById(R.id.functionX),
-            findViewById(R.id.functionSqrt),
-            findViewById(R.id.functionSquare),
-            findViewById(R.id.functionReciprocal)
-        };
+	private void setupFunctionButtons() {
+		Button[] functionButtons = new Button[]{
+			findViewById(R.id.functionX),
+			findViewById(R.id.functionSqrt),
+			findViewById(R.id.functionSquare),
+			findViewById(R.id.functionReciprocal)
+		};
 
-        String[] functions = {"x", "√x", "x²", "1/x"};
-        for (int i = 0; i < functionButtons.length; i++) {
-            Button button = functionButtons[i];
-            String function = functions[i];
-            button.setOnClickListener(v -> appendToFunction(function));
-        }
-    }
+		String[] functions = {"x", "√x", "x²", "1/x"};
+		for (int i = 0; i < functionButtons.length; i++) {
+			Button button = functionButtons[i];
+			String function = functions[i];
+			button.setOnClickListener(v -> appendToFunction(function));
+		}
+	}
 
-    private void setupOperatorButtons() {
-        Button[] operatorButtons = new Button[]{
-            findViewById(R.id.operatorAdd),
-            findViewById(R.id.operatorSubtract),
-            findViewById(R.id.operatorMultiply),
-            findViewById(R.id.operatorDivide)
-        };
+	private void setupOperatorButtons() {
+		Button[] operatorButtons = new Button[]{
+			findViewById(R.id.operatorAdd),
+			findViewById(R.id.operatorSubtract),
+			findViewById(R.id.operatorMultiply),
+			findViewById(R.id.operatorDivide)
+		};
 
-        String[] operators = {"+", "-", "×", "÷"};
-        for (int i = 0; i < operatorButtons.length; i++) {
-            Button button = operatorButtons[i];
-            String operator = operators[i];
-            button.setOnClickListener(v -> appendToFunction(" " + operator + " "));
-        }
-    }
+		String[] operators = {"+", "-", "×", "÷"};
+		for (int i = 0; i < operatorButtons.length; i++) {
+			Button button = operatorButtons[i];
+			String operator = operators[i];
+			button.setOnClickListener(v -> appendToFunction(" " + operator + " "));
+		}
+	}
 
     private void setupCalculateButton() {
         calculateButton.setOnClickListener(v -> calculateConcentration());
