@@ -438,7 +438,18 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+	private boolean isStudyActive = false; // Sınıf değişkeni olarak ekle
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		if (isStudyActive && previewView.getVisibility() == View.VISIBLE) {
+			startCamera();
+		}
+	}
+
 	private void showCamera() {
+		isStudyActive = true; // Kamera gösterildiğinde true yap
 		btnNewStudy.setVisibility(View.GONE);
 		btnRgbToConcentration.setVisibility(View.GONE);
 		btnCalibrate.setVisibility(View.GONE);
@@ -474,23 +485,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void clearCurrentStudy() {
-        if (photoAdapter != null) {
-            photoAdapter.clearPhotos();
-            photoRecyclerView.getAdapter().notifyDataSetChanged();
-        }
+	private void clearCurrentStudy() {
+		isStudyActive = false; // Çalışma bittiğinde false yap
+		if (photoAdapter != null) {
+			photoAdapter.clearPhotos();
+			photoRecyclerView.getAdapter().notifyDataSetChanged();
+		}
 
-        if (excelManager != null) {
-            try {
-                excelManager.close();
-                excelManager = null;
-            } catch (IOException e) {
-                Log.e("MainActivity", "Error closing Excel file", e);
-            }
-        }
+		if (excelManager != null) {
+			try {
+				excelManager.close();
+				excelManager = null;
+			} catch (IOException e) {
+				Log.e("MainActivity", "Error closing Excel file", e);
+			}
+		}
 
-        currentStudyFolder = null;
-    }
+		currentStudyFolder = null;
+	}
 
     private void createStudyFolder(String folderName) {
         clearCurrentStudy();
