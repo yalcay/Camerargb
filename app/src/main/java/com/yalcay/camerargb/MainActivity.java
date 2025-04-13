@@ -60,6 +60,18 @@ import java.util.concurrent.TimeUnit;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Handler;
+import android.view.MotionEvent;
+import android.view.Surface;
+import androidx.camera.core.FocusMeteringAction;
+import androidx.camera.core.FocusMeteringResult;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.os.Handler;
+import android.view.OrientationEventListener;
+import android.view.Surface;
 
 public class MainActivity extends AppCompatActivity {
     private MaterialButton btnNewStudy;
