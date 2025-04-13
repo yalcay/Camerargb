@@ -78,6 +78,73 @@ public class MainActivity extends AppCompatActivity {
     private ExcelManager excelManager;
 	private Camera camera;
 
+    private void setupTapToFocus() {
+        previewView.setOnTouchListener((v, event) -> {
+            if (event.getAction() != MotionEvent.ACTION_DOWN) {
+                return false;
+            }
+
+            if (camera == null) {
+                return false;
+            }
+
+            MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
+                previewView.getWidth(),
+                previewView.getHeight()
+            );
+
+            MeteringPoint point = factory.createPoint(event.getX(), event.getY());
+
+            FocusMeteringAction action = new FocusMeteringAction.Builder(point)
+                .setAutoCancelDuration(5, TimeUnit.SECONDS)
+                .build();
+
+            ListenableFuture<FocusMeteringResult> future = 
+                camera.getCameraControl().startFocusAndMetering(action);
+
+            future.addListener(() -> {
+                try {
+                    FocusMeteringResult result = future.get();
+                    if (result.isFocusSuccessful()) {
+                        runOnUiThread(() -> {
+                            showFocusIndicator(event.getX(), event.getY());
+                        });
+                    }
+                } catch (Exception e) {
+                    Log.e("MainActivity", "Error focusing", e);
+                }
+            }, ContextCompat.getMainExecutor(this));
+
+            return true;
+        });
+    }
+
+    private void showFocusIndicator(float x, float y) {
+        // Odak göstergesi animasyonu
+        ImageView focusIndicator = new ImageView(this);
+        GradientDrawable circle = new GradientDrawable();
+        circle.setShape(GradientDrawable.OVAL);
+        circle.setStroke(4, Color.WHITE);
+        circle.setColor(Color.TRANSPARENT);
+        
+        focusIndicator.setImageDrawable(circle);
+        
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(100, 100);
+        params.leftMargin = (int) (x - 50);
+        params.topMargin = (int) (y - 50);
+        focusIndicator.setLayoutParams(params);
+        
+        cameraOverlay.addView(focusIndicator);
+        
+        focusIndicator.animate()
+            .scaleX(0.5f)
+            .scaleY(0.5f)
+            .alpha(0)
+            .setDuration(300)
+            .withEndAction(() -> cameraOverlay.removeView(focusIndicator))
+            .start();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -365,6 +432,60 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+	private void showSamplingPoints(int x, int y, int width, int height) {
+		// Örnekleme noktalarını ekranda göster
+		int pointCount = 9; // 3x3 grid
+		int spacing = Math.min(width, height) / 4;
+		
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				float pointX = x + (i + 1) * spacing;
+				float pointY = y + (j + 1) * spacing;
+				
+				ImageView point = new ImageView(this);
+				GradientDrawable cross = new GradientDrawable();
+				
+				// Her satır için farklı renk
+				int color;
+				if (i == 0) color = Color.RED;
+				else if (i == 1) color = Color.GREEN;
+				else color = Color.BLUE;
+				
+				// Artı şeklinde çizim
+				drawCross(point, color);
+				
+				FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(20, 20);
+				params.leftMargin = (int) pointX - 10;
+				params.topMargin = (int) pointY - 10;
+				point.setLayoutParams(params);
+				
+				cameraOverlay.addView(point);
+				
+				// 2 saniye sonra noktaları kaldır
+				new Handler().postDelayed(() -> {
+					cameraOverlay.removeView(point);
+				}, 2000);
+			}
+		}
+	}
+
+	private void drawCross(ImageView view, int color) {
+		Paint paint = new Paint();
+		paint.setColor(color);
+		paint.setStrokeWidth(4);
+		paint.setStyle(Paint.Style.STROKE);
+		
+		Bitmap bitmap = Bitmap.createBitmap(20, 20, Bitmap.Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap);
+		
+		// Yatay çizgi
+		canvas.drawLine(0, 10, 20, 10, paint);
+		// Dikey çizgi
+		canvas.drawLine(10, 0, 10, 20, paint);
+		
+		view.setImageBitmap(bitmap);
+	}
 
     private void startCamera() {
         cameraProviderFuture.addListener(() -> {
