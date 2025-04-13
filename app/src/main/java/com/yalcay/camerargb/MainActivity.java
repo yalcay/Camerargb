@@ -65,11 +65,6 @@ import android.view.Surface;
 import androidx.camera.core.FocusMeteringResult;
 import android.view.OrientationEventListener;
 import android.app.AlertDialog;
-import android.widget.Toast;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.core.content.ContextCompat;
-import android.util.Log;
-import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
     private MaterialButton btnNewStudy;
