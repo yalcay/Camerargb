@@ -39,7 +39,7 @@ configurations.all {
         force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
         force 'androidx.annotation:annotation-experimental:1.3.0'
         
-        // Duplicate sınıf sorununu çözmek için
+        // Duplicate
         eachDependency { DependencyResolveDetails details ->
             if (details.requested.group == 'androidx.annotation' && details.requested.name == 'annotation-experimental') {
                 details.useVersion '1.3.0'
