@@ -14,7 +14,6 @@
         tools:ignore="ScopedStorage" />
     
     <uses-feature android:name="android.hardware.camera" android:required="true"/>
-	<uses-feature android:name="android.hardware.camera" />
 	<uses-feature android:name="android.hardware.camera.autofocus" />
 	
     <application
