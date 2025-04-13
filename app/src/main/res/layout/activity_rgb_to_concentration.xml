@@ -28,11 +28,13 @@
     </LinearLayout>
 
     <GridLayout
+        android:id="@+id/buttonGrid"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:columnCount="4"
         android:rowCount="2"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="16dp"
+        android:alignmentMode="alignBounds">
 
         <!-- İlk satır -->
         <Spinner
@@ -41,19 +43,19 @@
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"/>
 
-        <ToggleButton
+        <Button
             android:id="@+id/colorButton1"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"/>
 
-        <ToggleButton
+        <Button
             android:id="@+id/colorButton2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"/>
 
-        <ToggleButton
+        <Button
             android:id="@+id/colorButton3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
