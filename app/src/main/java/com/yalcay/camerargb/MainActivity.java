@@ -123,9 +123,7 @@ public class MainActivity extends AppCompatActivity {
 			// Eğer kamera açıksa ve çalışma devam ediyorsa
 			new AlertDialog.Builder(this)
 				.setTitle("Finish Study")
-				.setMessage(String.format("Current Date and Time (UTC): %s\nUser: %s\n\nDo you want to finish this study?",
-					new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()),
-					"yalcay"))
+				.setMessage("Do you want to finish this study?")
 				.setPositiveButton("Yes", (dialog, which) -> {
 					try {
 						if (excelManager != null) {
