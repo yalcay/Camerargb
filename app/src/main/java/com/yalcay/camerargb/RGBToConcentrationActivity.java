@@ -80,6 +80,42 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         rectangleView.setBackground(shape);
     }
 
+    private void setupCalculateButton() {
+        calculateButton.setOnClickListener(v -> {
+            if (selectedColorComponent.isEmpty()) {
+                Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            try {
+                double slope = Double.parseDouble(slopeInput.getText().toString());
+                double intercept = Double.parseDouble(interceptInput.getText().toString());
+
+                // Get color value from the center of rectangle area
+                int[] location = new int[2];
+                rectangleView.getLocationInWindow(location);
+                int centerX = location[0] + rectangleView.getWidth() / 2;
+                int centerY = location[1] + rectangleView.getHeight() / 2;
+
+                // Get the color value
+                double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
+
+                // Calculate concentration using the formula: concentration = (colorValue - intercept) / slope
+                double concentration = (colorValue - intercept) / slope;
+
+                // Display result
+                resultText.setText(String.format("Color Value: %.2f\nConcentration: %.2f", 
+                    colorValue, concentration));
+
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Please enter valid slope and intercept values", 
+                    Toast.LENGTH_SHORT).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     private void setupSpinner() {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
             android.R.layout.simple_spinner_item,
