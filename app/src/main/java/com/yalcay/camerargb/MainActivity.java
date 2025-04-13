@@ -98,15 +98,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 	
-    private void setupNewStudyButton() {
-        btnNewStudy.setOnClickListener(v -> {
-            if (isProcessingExcel) {
-                Toast.makeText(this, 
-                    "Please wait for the current study to finish processing", 
-                    Toast.LENGTH_LONG).show();
-                return;
-            }
-		}
+	private void setupNewStudyButton() {
+		btnNewStudy.setOnClickListener(v -> {
+			if (isProcessingExcel) {
+				Toast.makeText(this, 
+					"Please wait for the current study to finish processing", 
+					Toast.LENGTH_LONG).show();
+				return;
+			}
+			showStudyNameDialog();  // Eğer Excel işlemi devam etmiyorsa, yeni çalışma başlat
+		});
 	}
     private void processPhoto(File photoFile) {
         try {
