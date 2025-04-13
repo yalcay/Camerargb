@@ -52,6 +52,11 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.TimeZone;
 import android.view.Gravity;
+import androidx.camera.core.FocusMeteringAction;
+import androidx.camera.core.MeteringPoint;
+import androidx.camera.core.MeteringPointFactory;
+import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     private MaterialButton btnNewStudy;
@@ -71,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
     private ImageCapture imageCapture;
     private ImageButton captureButton;
     private ExcelManager excelManager;
+	private Camera camera;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
