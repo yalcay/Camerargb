@@ -31,6 +31,8 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
     private ImageButton clearFunctionButton;
     private String selectedColorComponent = "";
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
+    private GridLayout buttonGrid;
+    private Button[] colorButtons;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,14 +53,18 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         interceptInput = findViewById(R.id.interceptInput);
         functionInput = findViewById(R.id.functionInput);
         resultText = findViewById(R.id.resultText);
+        colorModeSpinner = findViewById(R.id.colorModeSpinner);
+        buttonGrid = findViewById(R.id.buttonGrid);
         previewView = findViewById(R.id.previewView);
         rectangleView = findViewById(R.id.rectangleView);
         calculateButton = findViewById(R.id.calculateButton);
         clearFunctionButton = findViewById(R.id.clearFunctionButton);
-        colorModeSpinner = findViewById(R.id.colorModeSpinner);
-        colorButtonContainer = findViewById(R.id.colorButtonContainer);
-        functionButtonContainer = findViewById(R.id.functionButtonContainer);
-        operatorButtonContainer = findViewById(R.id.operatorButtonContainer);
+
+        // Color butonlarını bul
+        colorButtons = new Button[3];
+        colorButtons[0] = findViewById(R.id.colorButton1);
+        colorButtons[1] = findViewById(R.id.colorButton2);
+        colorButtons[2] = findViewById(R.id.colorButton3);
 
         setupRectangleView();
     }
@@ -126,12 +132,31 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         colorModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                setupColorButtons(position == 0 ? "RGB" : "HSV");
+                boolean isRGB = position == 0;
+                colorButtons[0].setText(isRGB ? "R" : "H");
+                colorButtons[1].setText(isRGB ? "G" : "S");
+                colorButtons[2].setText(isRGB ? "B" : "V");
+                selectedColorComponent = ""; // Seçimi sıfırla
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
+    }
+
+    private void setupColorButtons() {
+        for (Button button : colorButtons) {
+            button.setOnClickListener(v -> {
+                String component = ((Button) v).getText().toString();
+                selectedColorComponent = component;
+                updateFunctionInput(component);
+                
+                // Diğer butonların seçimini kaldır
+                for (Button other : colorButtons) {
+                    other.setSelected(other == v);
+                }
+            });
+        }
     }
 
     private void setupColorButtons(String mode) {
@@ -205,44 +230,44 @@ public class RGBToConcentrationActivity extends AppCompatActivity {
         functionInput.setText(currentFunction);
     }
 
-	private void calculateConcentration() {
-		if (selectedColorComponent.isEmpty()) {
-			Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
-			return;
-		}
+    private void calculateConcentration() {
+        if (selectedColorComponent.isEmpty()) {
+            Toast.makeText(this, "Please select a color component", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-		try {
-			double slope = Double.parseDouble(slopeInput.getText().toString());
-			double intercept = Double.parseDouble(interceptInput.getText().toString());
+        try {
+            double slope = Double.parseDouble(slopeInput.getText().toString());
+            double intercept = Double.parseDouble(interceptInput.getText().toString());
 
-			// Dikdörtgenin merkezinden renk değerini al
-			int[] location = new int[2];
-			rectangleView.getLocationInWindow(location);
-			int centerX = location[0] + rectangleView.getWidth() / 2;
-			int centerY = location[1] + rectangleView.getHeight() / 2;
+            // Dikdörtgenin merkezinden renk değerini al
+            int[] location = new int[2];
+            rectangleView.getLocationInWindow(location);
+            int centerX = location[0] + rectangleView.getWidth() / 2;
+            int centerY = location[1] + rectangleView.getHeight() / 2;
 
-			// Renk değerini al
-			double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
+            // Renk değerini al
+            double colorValue = getColorValue(selectedColorComponent, centerX, centerY);
 
-			// Fonksiyonu uygula
-			String function = functionInput.getText().toString();
-			double transformedValue = applyFunction(colorValue, function);
+            // Fonksiyonu uygula
+            String function = functionInput.getText().toString();
+            double transformedValue = applyFunction(colorValue, function);
 
-			// Konsantrasyonu hesapla: (transformedValue - intercept) / slope
-			double concentration = (transformedValue - intercept) / slope;
+            // Konsantrasyonu hesapla: (transformedValue - intercept) / slope
+            double concentration = (transformedValue - intercept) / slope;
 
-			// Sonucu göster
-			resultText.setText(String.format(
-				"Color Value: %.2f\nTransformed Value: %.2f\nConcentration: %.2f",
-				colorValue, transformedValue, concentration));
+            // Sonucu göster
+            resultText.setText(String.format(
+                "Color Value: %.2f\nTransformed Value: %.2f\nConcentration: %.2f",
+                colorValue, transformedValue, concentration));
 
-		} catch (NumberFormatException e) {
-			Toast.makeText(this, "Please enter valid slope and intercept values", 
-				Toast.LENGTH_SHORT).show();
-		} catch (Exception e) {
-			Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-		}
-	}
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Please enter valid slope and intercept values", 
+                Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
 
 	private double applyFunction(double value, String function) {
 		if (function.contains("1/")) {
