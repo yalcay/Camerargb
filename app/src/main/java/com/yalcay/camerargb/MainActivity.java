@@ -84,6 +84,157 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton captureButton;
     private ExcelManager excelManager;
 	private Camera camera;
+    private List<PhotoData> pendingPhotos = new ArrayList<>(); // Analiz bekleyen fotoğraflar
+    private boolean isProcessingExcel = false; // Excel işlemi devam ediyor mu?
+
+    private static class PhotoData {
+        File photoFile;
+        Bitmap bitmap;
+
+        PhotoData(File photoFile, Bitmap bitmap) {
+            this.photoFile = photoFile;
+            this.bitmap = bitmap;
+        }
+    }
+
+    private void processPhoto(File photoFile) {
+        try {
+            Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+            // Bitmap'i ve dosyayı listeye ekle
+            pendingPhotos.add(new PhotoData(photoFile, originalBitmap));
+
+            runOnUiThread(() -> {
+                Toast.makeText(MainActivity.this, 
+                    "Photo saved successfully", 
+                    Toast.LENGTH_SHORT).show();
+            });
+        } catch (Exception e) {
+            runOnUiThread(() -> {
+                Toast.makeText(MainActivity.this, 
+                    "Error saving image: " + e.getMessage(), 
+                    Toast.LENGTH_LONG).show();
+            });
+            e.printStackTrace();
+        }
+    }
+
+    private void showFinishStudyDialog() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+        String currentDateTime = sdf.format(new Date());
+
+        String message = String.format(
+            "Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): %s\n" +
+            "Current User's Login: %s\n\n" +
+            "Do you want to finish this study?",
+            currentDateTime,
+            "yalcay"
+        );
+
+        new AlertDialog.Builder(this)
+            .setTitle("Finish Study")
+            .setMessage(message)
+            .setPositiveButton("Yes", (dialog, which) -> {
+                isProcessingExcel = true; // Excel işlemi başlıyor
+                btnNewStudy.setEnabled(false); // NEW STUDY butonunu devre dışı bırak
+
+                // Önce UI'ı güncelle
+                btnNewStudy.setVisibility(View.VISIBLE);
+                btnRgbToConcentration.setVisibility(View.VISIBLE);
+                btnCalibrate.setVisibility(View.VISIBLE);
+                previewView.setVisibility(View.GONE);
+                rectangleView.setVisibility(View.GONE);
+                captureButton.setVisibility(View.GONE);
+                photoRecyclerView.setVisibility(View.GONE);
+                btnFinishStudy.setVisibility(View.GONE);
+
+                // Kamerayı kapat
+                ProcessCameraProvider.getInstance(this).addListener(() -> {
+                    try {
+                        ProcessCameraProvider cameraProvider = 
+                            ProcessCameraProvider.getInstance(this).get();
+                        cameraProvider.unbindAll();
+                    } catch (Exception e) {
+                        Log.e("CameraX", "Failed to unbind camera uses cases", e);
+                    }
+                }, ContextCompat.getMainExecutor(this));
+
+                // Progress dialog göster
+                ProgressDialog progressDialog = new ProgressDialog(this);
+                progressDialog.setTitle("Processing Photos");
+                progressDialog.setMessage("Please wait while photos are being analyzed...");
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+
+                // Arka planda fotoğrafları işle
+                new Thread(() -> {
+                    try {
+                        for (PhotoData photoData : pendingPhotos) {
+                            int previewWidth = photoData.bitmap.getWidth();
+                            int previewHeight = photoData.bitmap.getHeight();
+                            
+                            // Dikdörtgen boyutlarını hesapla
+                            int rectWidth = previewWidth / 3;  // Örnek boyut
+                            int rectHeight = previewHeight / 2; // Örnek boyut
+                            int bitmapX = (previewWidth - rectWidth) / 2;
+                            int bitmapY = (previewHeight - rectHeight) / 2;
+                            
+                            Bitmap croppedBitmap = Bitmap.createBitmap(
+                                photoData.bitmap, 
+                                bitmapX, 
+                                bitmapY, 
+                                rectWidth, 
+                                rectHeight
+                            );
+                            
+                            List<ColorProcessor.ColorPoint> points = 
+                                ColorProcessor.processRectangleArea(croppedBitmap, 0, 0, 
+                                    croppedBitmap.getWidth(), croppedBitmap.getHeight());
+                                    
+                            ColorProcessor.ColorCalculations calculations = 
+                                new ColorProcessor.ColorCalculations(points);
+                            
+                            excelManager.addData(photoData.photoFile.getName(), calculations);
+                            
+                            if (croppedBitmap != photoData.bitmap) {
+                                croppedBitmap.recycle();
+                            }
+                            photoData.bitmap.recycle();
+                        }
+
+                        // Excel dosyasını kaydet ve kapat
+                        if (excelManager != null) {
+                            excelManager.close();
+                        }
+
+                        pendingPhotos.clear(); // İşlenmiş fotoğrafları temizle
+
+                        runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(MainActivity.this, 
+                                "Study completed successfully", 
+                                Toast.LENGTH_SHORT).show();
+                            isProcessingExcel = false; // Excel işlemi bitti
+                            btnNewStudy.setEnabled(true); // NEW STUDY butonunu aktif et
+                        });
+
+                    } catch (Exception e) {
+                        runOnUiThread(() -> {
+                            progressDialog.dismiss();
+                            Toast.makeText(MainActivity.this, 
+                                "Error processing photos: " + e.getMessage(), 
+                                Toast.LENGTH_LONG).show();
+                            isProcessingExcel = false; // Excel işlemi bitti (hata ile)
+                            btnNewStudy.setEnabled(true); // NEW STUDY butonunu aktif et
+                        });
+                        e.printStackTrace();
+                    }
+                }).start();
+
+            })
+            .setNegativeButton("No", null)
+            .show();
+    }
 
 	private void setupTapToFocus() {
 		previewView.setOnTouchListener((v, event) -> {
@@ -432,72 +583,6 @@ public class MainActivity extends AppCompatActivity {
             });
     }
 
-	private void processPhoto(File photoFile) {
-		try {
-			Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
-			
-			int previewWidth = previewView.getWidth();
-			int previewHeight = previewView.getHeight();
-			
-			int rectWidth = rectangleView.getWidth();
-			int rectHeight = rectangleView.getHeight();
-			int[] location = new int[2];
-			rectangleView.getLocationInWindow(location);
-			
-			float scaleX = (float) originalBitmap.getWidth() / previewWidth;
-			float scaleY = (float) originalBitmap.getHeight() / previewHeight;
-			
-			int bitmapX = (int) (location[0] * scaleX);
-			int bitmapY = (int) (location[1] * scaleY);
-			int bitmapRectWidth = (int) (rectWidth * scaleX);
-			int bitmapRectHeight = (int) (rectHeight * scaleY);
-			
-			bitmapX = Math.max(0, Math.min(bitmapX, 
-				originalBitmap.getWidth() - bitmapRectWidth));
-			bitmapY = Math.max(0, Math.min(bitmapY, 
-				originalBitmap.getHeight() - bitmapRectHeight));
-			
-			// Örnekleme noktalarını göster - real-time preview üzerinde
-			runOnUiThread(() -> showSamplingPoints(
-				location[0], location[1], rectWidth, rectHeight));
-			
-			Bitmap croppedBitmap = Bitmap.createBitmap(
-				originalBitmap, 
-				bitmapX, 
-				bitmapY, 
-				bitmapRectWidth, 
-				bitmapRectHeight
-			);
-			
-			List<ColorProcessor.ColorPoint> points = 
-				ColorProcessor.processRectangleArea(croppedBitmap, 0, 0, 
-					croppedBitmap.getWidth(), croppedBitmap.getHeight());
-					
-			ColorProcessor.ColorCalculations calculations = 
-				new ColorProcessor.ColorCalculations(points);
-			
-			excelManager.addData(photoFile.getName(), calculations);
-			
-			if (croppedBitmap != originalBitmap) {
-				croppedBitmap.recycle();
-			}
-			originalBitmap.recycle();
-			
-			runOnUiThread(() -> {
-				Toast.makeText(MainActivity.this, 
-					"Photo saved and analyzed", 
-					Toast.LENGTH_SHORT).show();
-			});
-		} catch (Exception e) {
-			runOnUiThread(() -> {
-				Toast.makeText(MainActivity.this, 
-					"Error processing image: " + e.getMessage(), 
-					Toast.LENGTH_LONG).show();
-			});
-			e.printStackTrace();
-		}
-	}
-
 	private void showSamplingPoints(int x, int y, int width, int height) {
 		// Örnekleme noktalarını ekranda göster
 		int pointCount = 9; // 3x3 grid
@@ -739,64 +824,6 @@ public class MainActivity extends AppCompatActivity {
         photoRecyclerView.setAdapter(photoAdapter);
     }
 
-	private void showFinishStudyDialog() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
-		sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-		String currentDateTime = sdf.format(new Date());
-
-		String message = String.format("Current Date and Time (UTC): %s\nUser: %s\n\nDo you want to finish this study?",
-				currentDateTime, "yalcay");
-
-		new AlertDialog.Builder(this)
-			.setTitle("Finish Study")
-			.setMessage(message)
-			.setPositiveButton("Yes", (dialog, which) -> {
-				try {
-					if (excelManager != null) {
-						excelManager.close();
-					}
-
-					// Çalışma tamamlandı, UI'ı sıfırla
-					clearCurrentStudy();
-					
-					// Ana menüyü göster
-					btnNewStudy.setVisibility(View.VISIBLE);
-					btnRgbToConcentration.setVisibility(View.VISIBLE);
-					btnCalibrate.setVisibility(View.VISIBLE);
-
-					// Kamera ile ilgili görünümleri gizle
-					previewView.setVisibility(View.GONE);
-					rectangleView.setVisibility(View.GONE);
-					captureButton.setVisibility(View.GONE);
-					photoRecyclerView.setVisibility(View.GONE);
-					btnFinishStudy.setVisibility(View.GONE);
-
-					// Başarı mesajı göster
-					Toast.makeText(this, 
-						"Study completed successfully", 
-						Toast.LENGTH_SHORT).show();
-
-					// Kamerayı kapat
-					ProcessCameraProvider.getInstance(this).addListener(() -> {
-						try {
-							ProcessCameraProvider cameraProvider = 
-								ProcessCameraProvider.getInstance(this).get();
-							cameraProvider.unbindAll();
-						} catch (Exception e) {
-							Log.e("CameraX", "Failed to unbind camera uses cases", e);
-						}
-					}, ContextCompat.getMainExecutor(this));
-
-				} catch (IOException e) {
-					Toast.makeText(this, 
-						"Error closing study: " + e.getMessage(), 
-						Toast.LENGTH_LONG).show();
-					e.printStackTrace();
-				}
-			})
-			.setNegativeButton("No", null)
-			.show();
-	}
 
     private void showStudyNameDialog() {
         final EditText input = new EditText(this);
