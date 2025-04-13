@@ -163,7 +163,7 @@
         android:id="@+id/calculateButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Calculate Concentration"/>
+        android:text="CALCULATE CONCENTRATION"/>
 
     <TextView
         android:id="@+id/resultText"
