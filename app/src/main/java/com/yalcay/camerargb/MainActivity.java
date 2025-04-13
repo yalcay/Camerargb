@@ -505,33 +505,46 @@ public class MainActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-    private void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
-        try {
-            cameraProvider.unbindAll();
+	private void bindPreview(@NonNull ProcessCameraProvider cameraProvider) {
+		try {
+			cameraProvider.unbindAll();
 
-            Preview preview = new Preview.Builder()
-                .setTargetResolution(new Size(1280, 720))
-                .build();
+			Preview preview = new Preview.Builder()
+				.setTargetRotation(Surface.ROTATION_0) // Portrait mod
+				.setTargetResolution(new Size(720, 1280)) // Portrait çözünürlük
+				.build();
 
-            imageCapture = new ImageCapture.Builder()
-                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                .setTargetResolution(new Size(1280, 720))
-                .build();
+			imageCapture = new ImageCapture.Builder()
+				.setTargetRotation(Surface.ROTATION_0) // Portrait mod
+				.setTargetResolution(new Size(720, 1280)) // Portrait çözünürlük
+				.build();
 
-            CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build();
+			CameraSelector cameraSelector = new CameraSelector.Builder()
+				.requireLensFacing(CameraSelector.LENS_FACING_BACK)
+				.build();
 
-            preview.setSurfaceProvider(previewView.getSurfaceProvider());
+			preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-            Camera camera = cameraProvider.bindToLifecycle(
-                this,
-                cameraSelector,
-                preview,
-                imageCapture
-            );
-        } catch (Exception e) {
-            Log.e("CameraX", "Use case binding failed", e);
+			camera = cameraProvider.bindToLifecycle(
+				this,
+				cameraSelector,
+				preview,
+				imageCapture
+			);
+
+			// Zoom'u devre dışı bırak
+			camera.getCameraControl().setZoomRatio(1.0f);
+			camera.getCameraInfo().getZoomState().observe(this, state -> {
+				if (state.getZoomRatio() != 1.0f) {
+					camera.getCameraControl().setZoomRatio(1.0f);
+				}
+			});
+
+			// Manuel odaklama için listener ekle
+			setupTapToFocus();
+
+		} catch (Exception e) {
+			Log.e("CameraX", "Use case binding failed", e);
             runOnUiThread(() -> {
                 Toast.makeText(MainActivity.this,
                     "Camera initialization failed: " + e.getMessage(),
