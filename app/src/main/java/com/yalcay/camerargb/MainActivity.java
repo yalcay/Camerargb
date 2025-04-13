@@ -61,10 +61,6 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.os.Handler;
 import android.view.MotionEvent;
-import android.view.Surface;
-import androidx.camera.core.FocusMeteringResult;
-import android.view.OrientationEventListener;
-import android.app.AlertDialog;
 
 public class MainActivity extends AppCompatActivity {
     private MaterialButton btnNewStudy;
