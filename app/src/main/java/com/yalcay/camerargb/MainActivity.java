@@ -371,67 +371,71 @@ public class MainActivity extends AppCompatActivity {
             });
     }
 
-    private void processPhoto(File photoFile) {
-        try {
-            Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
-            
-            int previewWidth = previewView.getWidth();
-            int previewHeight = previewView.getHeight();
-            
-            int rectWidth = rectangleView.getWidth();
-            int rectHeight = rectangleView.getHeight();
-            int[] location = new int[2];
-            rectangleView.getLocationInWindow(location);
-            
-            float scaleX = (float) originalBitmap.getWidth() / previewWidth;
-            float scaleY = (float) originalBitmap.getHeight() / previewHeight;
-            
-            int bitmapX = (int) (location[0] * scaleX);
-            int bitmapY = (int) (location[1] * scaleY);
-            int bitmapRectWidth = (int) (rectWidth * scaleX);
-            int bitmapRectHeight = (int) (rectHeight * scaleY);
-            
-            bitmapX = Math.max(0, Math.min(bitmapX, 
-                originalBitmap.getWidth() - bitmapRectWidth));
-            bitmapY = Math.max(0, Math.min(bitmapY, 
-                originalBitmap.getHeight() - bitmapRectHeight));
-            
-            Bitmap croppedBitmap = Bitmap.createBitmap(
-                originalBitmap, 
-                bitmapX, 
-                bitmapY, 
-                bitmapRectWidth, 
-                bitmapRectHeight
-            );
-            
-            List<ColorProcessor.ColorPoint> points = 
-                ColorProcessor.processRectangleArea(croppedBitmap, 0, 0, 
-                    croppedBitmap.getWidth(), croppedBitmap.getHeight());
-                    
-            ColorProcessor.ColorCalculations calculations = 
-                new ColorProcessor.ColorCalculations(points);
-            
-            excelManager.addData(photoFile.getName(), calculations);
-            
-            if (croppedBitmap != originalBitmap) {
-                croppedBitmap.recycle();
-            }
-            originalBitmap.recycle();
-            
-            runOnUiThread(() -> {
-                Toast.makeText(MainActivity.this, 
-                    "Photo saved and analyzed", 
-                    Toast.LENGTH_SHORT).show();
-            });
-        } catch (Exception e) {
-            runOnUiThread(() -> {
-                Toast.makeText(MainActivity.this, 
-                    "Error processing image: " + e.getMessage(), 
-                    Toast.LENGTH_LONG).show();
-            });
-            e.printStackTrace();
-        }
-    }
+	private void processPhoto(File photoFile) {
+		try {
+			Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+			
+			int previewWidth = previewView.getWidth();
+			int previewHeight = previewView.getHeight();
+			
+			int rectWidth = rectangleView.getWidth();
+			int rectHeight = rectangleView.getHeight();
+			int[] location = new int[2];
+			rectangleView.getLocationInWindow(location);
+			
+			float scaleX = (float) originalBitmap.getWidth() / previewWidth;
+			float scaleY = (float) originalBitmap.getHeight() / previewHeight;
+			
+			int bitmapX = (int) (location[0] * scaleX);
+			int bitmapY = (int) (location[1] * scaleY);
+			int bitmapRectWidth = (int) (rectWidth * scaleX);
+			int bitmapRectHeight = (int) (rectHeight * scaleY);
+			
+			bitmapX = Math.max(0, Math.min(bitmapX, 
+				originalBitmap.getWidth() - bitmapRectWidth));
+			bitmapY = Math.max(0, Math.min(bitmapY, 
+				originalBitmap.getHeight() - bitmapRectHeight));
+			
+			// Örnekleme noktalarını göster - real-time preview üzerinde
+			runOnUiThread(() -> showSamplingPoints(
+				location[0], location[1], rectWidth, rectHeight));
+			
+			Bitmap croppedBitmap = Bitmap.createBitmap(
+				originalBitmap, 
+				bitmapX, 
+				bitmapY, 
+				bitmapRectWidth, 
+				bitmapRectHeight
+			);
+			
+			List<ColorProcessor.ColorPoint> points = 
+				ColorProcessor.processRectangleArea(croppedBitmap, 0, 0, 
+					croppedBitmap.getWidth(), croppedBitmap.getHeight());
+					
+			ColorProcessor.ColorCalculations calculations = 
+				new ColorProcessor.ColorCalculations(points);
+			
+			excelManager.addData(photoFile.getName(), calculations);
+			
+			if (croppedBitmap != originalBitmap) {
+				croppedBitmap.recycle();
+			}
+			originalBitmap.recycle();
+			
+			runOnUiThread(() -> {
+				Toast.makeText(MainActivity.this, 
+					"Photo saved and analyzed", 
+					Toast.LENGTH_SHORT).show();
+			});
+		} catch (Exception e) {
+			runOnUiThread(() -> {
+				Toast.makeText(MainActivity.this, 
+					"Error processing image: " + e.getMessage(), 
+					Toast.LENGTH_LONG).show();
+			});
+			e.printStackTrace();
+		}
+	}
 
 	private void showSamplingPoints(int x, int y, int width, int height) {
 		// Örnekleme noktalarını ekranda göster
