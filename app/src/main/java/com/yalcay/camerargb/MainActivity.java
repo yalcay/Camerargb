@@ -105,7 +105,8 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_LONG).show();
                 return;
             }
-
+		}
+	}
     private void processPhoto(File photoFile) {
         try {
             Bitmap originalBitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
