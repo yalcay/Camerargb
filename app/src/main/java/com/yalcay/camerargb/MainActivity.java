@@ -85,72 +85,64 @@ public class MainActivity extends AppCompatActivity {
     private ExcelManager excelManager;
 	private Camera camera;
 
-    private void setupTapToFocus() {
-        previewView.setOnTouchListener((v, event) -> {
-            if (event.getAction() != MotionEvent.ACTION_DOWN) {
-                return false;
-            }
+	private void setupTapToFocus() {
+		previewView.setOnTouchListener((v, event) -> {
+			if (event.getAction() != MotionEvent.ACTION_DOWN) {
+				return false;
+			}
 
-            if (camera == null) {
-                return false;
-            }
+			if (camera == null) {
+				return false;
+			}
 
-            MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
-                previewView.getWidth(),
-                previewView.getHeight()
-            );
+			MeteringPointFactory factory = new SurfaceOrientedMeteringPointFactory(
+				previewView.getWidth(),
+				previewView.getHeight()
+			);
 
-            MeteringPoint point = factory.createPoint(event.getX(), event.getY());
+			MeteringPoint point = factory.createPoint(event.getX(), event.getY());
 
-            FocusMeteringAction action = new FocusMeteringAction.Builder(point)
-                .setAutoCancelDuration(5, TimeUnit.SECONDS)
-                .build();
+			FocusMeteringAction action = new FocusMeteringAction.Builder(point)
+				.setAutoCancelDuration(5, TimeUnit.SECONDS)
+				.build();
 
-            ListenableFuture<FocusMeteringResult> future = 
-                camera.getCameraControl().startFocusAndMetering(action);
+			camera.getCameraControl().startFocusAndMetering(action)
+				.addListener(() -> {
+					runOnUiThread(() -> {
+						showFocusIndicator(event.getX(), event.getY());
+					});
+				}, ContextCompat.getMainExecutor(this));
 
-            future.addListener(() -> {
-                try {
-                    FocusMeteringResult result = future.get();
-                    if (result.isFocusSuccessful()) {
-                        runOnUiThread(() -> {
-                            showFocusIndicator(event.getX(), event.getY());
-                        });
-                    }
-                } catch (Exception e) {
-                    Log.e("MainActivity", "Error focusing", e);
-                }
-            }, ContextCompat.getMainExecutor(this));
+			return true;
+		});
+	}
 
-            return true;
-        });
-    }
-
-    private void showFocusIndicator(float x, float y) {
-        // Odak göstergesi animasyonu
-        ImageView focusIndicator = new ImageView(this);
-        GradientDrawable circle = new GradientDrawable();
-        circle.setShape(GradientDrawable.OVAL);
-        circle.setStroke(4, Color.WHITE);
-        circle.setColor(Color.TRANSPARENT);
-        
-        focusIndicator.setImageDrawable(circle);
-        
-        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(100, 100);
-        params.leftMargin = (int) (x - 50);
-        params.topMargin = (int) (y - 50);
-        focusIndicator.setLayoutParams(params);
-        
-        cameraOverlay.addView(focusIndicator);
-        
-        focusIndicator.animate()
-            .scaleX(0.5f)
-            .scaleY(0.5f)
-            .alpha(0)
-            .setDuration(300)
-            .withEndAction(() -> cameraOverlay.removeView(focusIndicator))
-            .start();
-    }
+	private void showFocusIndicator(float x, float y) {
+		// Odak göstergesi için yeni view oluştur
+		ImageView focusIndicator = new ImageView(this);
+		GradientDrawable circle = new GradientDrawable();
+		circle.setShape(GradientDrawable.OVAL);
+		circle.setStroke(4, Color.WHITE);
+		circle.setColor(Color.TRANSPARENT);
+		
+		focusIndicator.setImageDrawable(circle);
+		
+		FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(100, 100);
+		params.leftMargin = (int) (x - 50);
+		params.topMargin = (int) (y - 50);
+		focusIndicator.setLayoutParams(params);
+		
+		cameraOverlay.addView(focusIndicator);
+		
+		// Odak animasyonu
+		focusIndicator.animate()
+			.scaleX(0.5f)
+			.scaleY(0.5f)
+			.alpha(0)
+			.setDuration(300)
+			.withEndAction(() -> cameraOverlay.removeView(focusIndicator))
+			.start();
+	}
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -514,13 +506,13 @@ public class MainActivity extends AppCompatActivity {
 			cameraProvider.unbindAll();
 
 			Preview preview = new Preview.Builder()
-				.setTargetRotation(Surface.ROTATION_0) // Portrait mod
-				.setTargetResolution(new Size(720, 1280)) // Portrait çözünürlük
+				.setTargetRotation(previewView.getDisplay().getRotation())
+				.setTargetResolution(new Size(720, 1280))
 				.build();
 
 			imageCapture = new ImageCapture.Builder()
-				.setTargetRotation(Surface.ROTATION_0) // Portrait mod
-				.setTargetResolution(new Size(720, 1280)) // Portrait çözünürlük
+				.setTargetRotation(previewView.getDisplay().getRotation())
+				.setTargetResolution(new Size(720, 1280))
 				.build();
 
 			CameraSelector cameraSelector = new CameraSelector.Builder()
@@ -549,13 +541,13 @@ public class MainActivity extends AppCompatActivity {
 
 		} catch (Exception e) {
 			Log.e("CameraX", "Use case binding failed", e);
-            runOnUiThread(() -> {
-                Toast.makeText(MainActivity.this,
-                    "Camera initialization failed: " + e.getMessage(),
-                    Toast.LENGTH_LONG).show();
-            });
-        }
-    }
+			runOnUiThread(() -> {
+				Toast.makeText(MainActivity.this,
+					"Camera initialization failed: " + e.getMessage(),
+					Toast.LENGTH_LONG).show();
+			});
+		}
+	}
 
     private void checkPermissions() {
         List<String> permissionsToRequest = new ArrayList<>();
