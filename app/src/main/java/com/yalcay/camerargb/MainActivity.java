@@ -57,6 +57,9 @@ import androidx.camera.core.MeteringPoint;
 import androidx.camera.core.MeteringPointFactory;
 import androidx.camera.core.SurfaceOrientedMeteringPointFactory;
 import java.util.concurrent.TimeUnit;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.os.Handler;
 
 public class MainActivity extends AppCompatActivity {
     private MaterialButton btnNewStudy;
