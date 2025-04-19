@@ -107,51 +107,55 @@ public class ExcelManager implements AutoCloseable {
         saveWorkbook(); // Her veri eklendiğinde otomatik kaydet
     }
 
-    public synchronized void saveWorkbook() throws IOException {
-        if (isWorkbookClosed) {
-            throw new IOException("Workbook is already closed");
-        }
+	public synchronized void saveWorkbook() throws IOException {
+		if (isWorkbookClosed) {
+			throw new IOException("Workbook is already closed");
+		}
 
-        // Ensure directory exists
-        File folder = new File(folderPath);
-        if (!folder.exists()) {
-            if (!folder.mkdirs()) {
-                throw new IOException("Could not create directory: " + folderPath);
-            }
-        }
+		// Ensure directory exists
+		File folder = new File(folderPath);
+		if (!folder.exists()) {
+			if (!folder.mkdirs()) {
+				throw new IOException("Could not create directory: " + folderPath);
+			}
+		}
 
-        // Create Excel file
-        File file = new File(folder, "color_analysis.xlsx");
-        
-        FileOutputStream fileOut = null;
-        try {
-            fileOut = new FileOutputStream(file);
-            workbook.write(fileOut);
-            fileOut.flush();
-        } catch (IOException e) {
-            throw new IOException("Error saving Excel file: " + file.getAbsolutePath() + "\n" + e.getMessage());
-        } finally {
-            if (fileOut != null) {
-                try {
-                    fileOut.close();
-                } catch (IOException e) {
-                    // log or handle the exception
-                }
-            }
-        }
-    }
+		// Create Excel file
+		File file = new File(folder, "color_analysis.xlsx");
+		System.out.println("Attempting to save file at: " + file.getAbsolutePath());
 
-    @Override
-    public void close() throws IOException {
-        if (!isWorkbookClosed) {
-            try {
-                saveWorkbook();
-                if (workbook != null) {
-                    workbook.close();
-                }
-            } finally {
-                isWorkbookClosed = true;
-            }
-        }
-    }
+		FileOutputStream fileOut = null;
+		try {
+			fileOut = new FileOutputStream(file);
+			workbook.write(fileOut);
+			fileOut.flush();
+			System.out.println("Workbook saved successfully!");
+		} catch (IOException e) {
+			System.err.println("Error saving Excel file: " + file.getAbsolutePath() + "\n" + e.getMessage());
+			throw e;
+		} finally {
+			if (fileOut != null) {
+				try {
+					fileOut.close();
+				} catch (IOException e) {
+					System.err.println("Error closing file output stream: " + e.getMessage());
+				}
+			}
+		}
+	}
+
+	@Override
+	public void close() throws IOException {
+		if (!isWorkbookClosed) {
+			try {
+				saveWorkbook();
+				if (workbook != null) {
+					workbook.close();
+					System.out.println("Workbook closed successfully!");
+				}
+			} finally {
+				isWorkbookClosed = true;
+			}
+		}
+	}
 }
